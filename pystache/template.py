@@ -128,7 +128,7 @@ class Template(object):
         for item in listing:
             insides.append(self._render_dictionary(template, item))
 
-        return ''.join(insides)
+        return literal(''.join(insides))
 
     @modifiers.set(None)
     def _render_tag(self, tag_name):
