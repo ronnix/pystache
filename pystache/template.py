@@ -45,7 +45,7 @@ class Template(object):
 
     modifiers = Modifiers()
 
-    def __init__(self, template=None, context=None, **kwargs):
+    def __init__(self, template=None, context=None, loader=None, **kwargs):
         from view import View
 
         self.template = template
@@ -55,6 +55,8 @@ class Template(object):
 
         self.view = context if isinstance(context, View) else View(context=context)
         self._compile_regexps()
+
+        self.loader = loader
 
     def _compile_regexps(self):
         tags = {
@@ -118,7 +120,7 @@ class Template(object):
 
     def _render_dictionary(self, template, context):
         self.view.context_list.insert(0, context)
-        template = Template(template, self.view)
+        template = Template(template, self.view, self.loader)
         out = template.render()
         self.view.context_list.pop(0)
         return out
@@ -149,9 +151,11 @@ class Template(object):
 
     @modifiers.set('>')
     def _render_partial(self, template_name):
-        from pystache import Loader
-        markup = Loader().load_template(template_name, self.view.template_path, encoding=self.view.template_encoding)
-        template = Template(markup, self.view)
+        if self.loader is None:
+            from pystache import Loader
+            self.loader = Loader()
+        markup = self.loader.load_template(template_name, self.view.template_path, encoding=self.view.template_encoding)
+        template = Template(markup, self.view, self.loader)
         return template.render()
 
     @modifiers.set('=')
